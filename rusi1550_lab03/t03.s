@@ -11,10 +11,10 @@ Date:    2020-12-14
 -------------------------------------------------------
 */
 // Constants
-.equ DELAY_TIME, 200000000
+//.equ DELAY_TIME, 200000000
 .equ TIMER, 0xfffec600
 .equ LEDS,  0xff200000
-.equ LED_BITS, 0x0F0F0F0F
+//.equ LED_BITS, 0x0F0F0F0F
 .org	0x1000	// Start at memory location 1000
 .text  // Code section
 .global _start
@@ -22,8 +22,13 @@ _start:
 
 LDR R0, =LEDS		// LEDs base address
 LDR R1, =TIMER		// private timer base address
-LDR R2, =LED_BITS	// value to set LEDs
-LDR R3, =200000000	// timeout = 1/(200 MHz) x 200x10^6 = 1 sec
+
+LDR R2, =LED_BIT	// Grabbing the delay time out of memory
+LDR R2, [R2]
+
+LDR R3, =DELAY_TIME	// Grabbing the delay time out of memory 
+LDR R3, [R3]
+
 STR R3, [R1]		// write timeout to timer load register
 MOV R3, #0b011		// set bits: mode = 1 (auto), enable = 1
 STR R3, [R1, #0x8]	// write to timer control register
@@ -36,5 +41,12 @@ BEQ WAIT			// wait for timer to expire
 STR R3, [R1, #0xC]	// reset timer flag bit
 ROR	R2, #1			// rotate the LED bits
 B LOOP
+
+.data	// Initialized data section
+LED_BIT:
+.word 0x0F0F0F0F  // <--- Store bit loctation into memory
+DELAY_TIME:
+.word 200000000
+.bss
 
 .end
